@@ -337,7 +337,8 @@ def render_plots_canada(dropdown):
                 'date': 'Date',
                 'value': 'Total Cases',
                 'variable': ' '
-            }
+            },
+            color_discrete_sequence=px.colors.qualitative.Light24
         )
     elif dropdown == 'numdeaths':
         fig_choropleth = px.choropleth_mapbox(
@@ -357,6 +358,35 @@ def render_plots_canada(dropdown):
             customdata=np.stack((df_map_CA['province'], df_map_CA['Death Toll']), axis=-1),
             hovertemplate=hovertemplate
         )
+        renamed_timeorder = df_timeorder.rename(
+            columns={'numdeaths': 'Canada',
+                     'numdeaths_Alberta': 'Alberta',
+                     'numdeaths_British Columbia': 'British Columbia',
+                     'numdeaths_Manitoba': 'Manitoba',
+                     'numdeaths_New Brunswick': 'New Brunswick',
+                     'numdeaths_Newfoundland and Labrador': 'Newfoundland and Labrador',
+                     'numdeaths_Northwest Territories': 'Northwest Territories',
+                     'numdeaths_Nova Scotia': 'Nova Scotia',
+                     'numdeaths_Nunavut': 'Nunavut',
+                     'numdeaths_Ontario': 'Ontario',
+                     'numdeaths_Prince Edward Island': 'Prince Edward Island',
+                     'numdeaths_Quebec': 'Quebec',
+                     'numdeaths_Repatriated travellers': 'Repatriated travellers',
+                     'numdeaths_Saskatchewan': 'Saskatchewan',
+                     'numdeaths_Yukon': 'Yukon'}
+        )
+        fig_ts = px.line(
+            renamed_timeorder, x='date',
+            y=['Canada', 'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick', 'Newfoundland and Labrador',
+               'Northwest Territories', 'Nova Scotia', 'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec',
+               'Repatriated travellers', 'Saskatchewan', 'Yukon'],
+            labels={
+                'date': 'Date',
+                'value': 'Total Deaths',
+                'variable': ' '
+            },
+            color_discrete_sequence=px.colors.qualitative.Light24
+        )
     elif dropdown == 'numtested':
         fig_choropleth = px.choropleth_mapbox(
             df_map_CA,
@@ -374,6 +404,35 @@ def render_plots_canada(dropdown):
         fig_choropleth.update_traces(
             customdata=np.stack((df_map_CA['province'], df_map_CA['Test Count']), axis=-1),
             hovertemplate=hovertemplate
+        )
+        renamed_timeorder = df_timeorder.rename(
+            columns={'numtested': 'Canada',
+                     'numtested_Alberta': 'Alberta',
+                     'numtested_British Columbia': 'British Columbia',
+                     'numtested_Manitoba': 'Manitoba',
+                     'numtested_New Brunswick': 'New Brunswick',
+                     'numtested_Newfoundland and Labrador': 'Newfoundland and Labrador',
+                     'numtested_Northwest Territories': 'Northwest Territories',
+                     'numtested_Nova Scotia': 'Nova Scotia',
+                     'numtested_Nunavut': 'Nunavut',
+                     'numtested_Ontario': 'Ontario',
+                     'numtested_Prince Edward Island': 'Prince Edward Island',
+                     'numtested_Quebec': 'Quebec',
+                     'numtested_Repatriated travellers': 'Repatriated travellers',
+                     'numtested_Saskatchewan': 'Saskatchewan',
+                     'numtested_Yukon': 'Yukon'}
+        )
+        fig_ts = px.line(
+            renamed_timeorder, x='date',
+            y=['Canada', 'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick', 'Newfoundland and Labrador',
+               'Northwest Territories', 'Nova Scotia', 'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec',
+               'Repatriated travellers', 'Saskatchewan', 'Yukon'],
+            labels={
+                'date': 'Date',
+                'value': 'Individuals Tested',
+                'variable': ' '
+            },
+            color_discrete_sequence=px.colors.qualitative.Light24
         )
     elif dropdown == 'numrecovered':
         fig_choropleth = px.choropleth_mapbox(
@@ -393,12 +452,38 @@ def render_plots_canada(dropdown):
             customdata=np.stack((df_map_CA['province'], df_map_CA['Recovery Count']), axis=-1),
             hovertemplate=hovertemplate
         )
+        renamed_timeorder = df_timeorder.rename(
+            columns={'numrecover': 'Canada',
+                     'numrecover_Alberta': 'Alberta',
+                     'numrecover_British Columbia': 'British Columbia',
+                     'numrecover_Manitoba': 'Manitoba',
+                     'numrecover_New Brunswick': 'New Brunswick',
+                     'numrecover_Newfoundland and Labrador': 'Newfoundland and Labrador',
+                     'numrecover_Northwest Territories': 'Northwest Territories',
+                     'numrecover_Nova Scotia': 'Nova Scotia',
+                     'numrecover_Nunavut': 'Nunavut',
+                     'numrecover_Ontario': 'Ontario',
+                     'numrecover_Prince Edward Island': 'Prince Edward Island',
+                     'numrecover_Quebec': 'Quebec',
+                     'numrecover_Repatriated travellers': 'Repatriated travellers',
+                     'numrecover_Saskatchewan': 'Saskatchewan',
+                     'numrecover_Yukon': 'Yukon'}
+        )
+        fig_ts = px.line(
+            renamed_timeorder, x='date',
+            y=['Canada', 'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick', 'Newfoundland and Labrador',
+               'Northwest Territories', 'Nova Scotia', 'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec',
+               'Repatriated travellers', 'Saskatchewan', 'Yukon'],
+            labels={
+                'date': 'Date',
+                'value': 'Cases Recovered',
+                'variable': ' '
+            },
+            color_discrete_sequence=px.colors.qualitative.Light24
+        )
     fig_choropleth.update_layout(margin={'r': 0, 'l': 0, 'b': 0, 't': 0})
-    fig_ts.update_layout(margin={'r': 0, 'l': 0, 'b': 0, 't': 0})
+    fig_ts.update_layout(margin={'r': 0, 'l': 0, 't': 0})
     return fig_choropleth, fig_ts
-
-
-
 
 
 if __name__ == '__main__':
