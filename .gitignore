@@ -1,3 +1,9 @@
+# Shape files
+*.shp
+
+# Large geoJSON
+canada-geo.json
+
 # Environment
 .env/
 

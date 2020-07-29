@@ -31,8 +31,7 @@ response = pd.read_csv(url)
 
 response = response.drop(columns=['pruid', 'prnameFR', 'percentoday',
                                   'ratetested', 'ratetotal', 'ratedeaths',
-                                  'percentdeath', 'percentactive',
-                                  'recoveredtoday'])
+                                  'percentdeath', 'percentactive'])
 
 response['date'] = pd.to_datetime(response['date'], dayfirst=True)
 response = response.sort_values(by=['prname', 'date'])
@@ -40,7 +39,7 @@ response = response.sort_values(by=['prname', 'date'])
 # Impute missing values
 provinces = response['prname'].value_counts().index
 impute_cols = ['numdeaths', 'numtested', 'deathstoday',
-               'testedtoday', 'numrecover', 'percentrecover']
+               'testedtoday', 'recoveredtoday', 'numrecover', 'percentrecover']
 
 for p in provinces:
     for colname in impute_cols:
