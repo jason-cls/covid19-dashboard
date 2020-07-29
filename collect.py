@@ -31,7 +31,8 @@ response = pd.read_csv(url)
 
 response = response.drop(columns=['pruid', 'prnameFR', 'percentoday',
                                   'ratetested', 'ratetotal', 'ratedeaths',
-                                  'percentdeath', 'percentactive'])
+                                  'percentdeath', 'percentactive','numtotal_last14',
+                                  'ratetotal_last14', 'numdeaths_last14', 'ratedeaths_last14'])
 
 response['date'] = pd.to_datetime(response['date'], dayfirst=True)
 response = response.sort_values(by=['prname', 'date'])

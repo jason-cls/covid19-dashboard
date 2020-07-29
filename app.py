@@ -18,7 +18,7 @@ app.config['suppress_callback_exceptions'] = True
 app.title = 'COVID-19 Dashboard'
 
 path_ca = os.path.join(os.getcwd(), 'data', 'covid19canada.csv')
-df_can = pd.read_csv(path_ca)
+df_can = pd.read_csv(path_ca, parse_dates=['date'])
 
 # Process geodata for Canada choropleth map
 path_geo_ca = os.path.join(os.getcwd(), 'data', 'ca_geodata', 'canada-geo-simple.json')
@@ -33,10 +33,7 @@ map_info_CA = {
     'Total Cases': [],
     'Death Toll': [],
     'Test Count': [],
-    'Recovery Count': [],
-    # 'Cases Today': [],
-    # 'Deaths Today': [],
-    # 'Tested Today': []
+    'Recovery Count': []
 }
 for k in range(len(jdataNo['features'])):
     jdataNo['features'][k]['properties']['id'] = k
@@ -50,11 +47,17 @@ for k in range(len(jdataNo['features'])):
     map_info_CA['Death Toll'].append(df_pr['numdeaths'].values[-1])
     map_info_CA['Test Count'].append(df_pr['numtested'].values[-1])
     map_info_CA['Recovery Count'].append(df_pr['numrecover'].values[-1])
-    # map_info_CA['Cases Today'].append(df_pr['numtoday'].values[-1])
-    # map_info_CA['Deaths Today'].append(df_pr['deathstoday'].values[-1])
-    # map_info_CA['Tested Today'].append(df_pr['testedtoday'].values[-1])
 
 df_map_CA = pd.DataFrame(map_info_CA)
+
+# Timeseries data
+df_timeorder = df_can.loc[df_can['prname'] == 'Canada']
+last_loc = 'Canada'
+for region in pd.unique(df_can['prname']):
+    if region != 'Canada':
+        df_region = df_can.loc[df_can['prname'] == region]
+        df_timeorder = df_timeorder.merge(df_region, on='date', how='outer', suffixes=[None, '_' + region])
+        last_loc = region
 
 tab_canada = html.Div([
     dbc.Row(
@@ -168,15 +171,27 @@ tab_canada = html.Div([
         style={'margin-bottom': 10}
     ),
 
+    dbc.Row([
+        html.Div(
+            [
+                dbc.Col(
+                    dcc.Graph(id='choropleth-map',  clear_on_unhover=True),
+                    width=12
+                )
+            ],
+            style={'width': '100%', 'margin-bottom': 50}
+        )
+    ]),
+
     dbc.Row(
         html.Div(
             [
                 dbc.Col(
-                    dcc.Graph(id='choropleth-map', responsive=True, clear_on_unhover=True),
+                    dcc.Graph(id='timeseries', responsive=True),
                     width=12
                 )
             ],
-            style={'width': '100%'}
+            style={'width': '100%', 'margin-bottom': 50}
         )
     )
 ])
@@ -269,9 +284,10 @@ def render_tab_content(tab):
         return tab_ontario
 
 
-@app.callback(Output('choropleth-map', 'figure'),
+@app.callback([Output('choropleth-map', 'figure'),
+               Output('timeseries', 'figure')],
               [Input('stat-dropdown', 'value')])
-def render_map_canada(dropdown):
+def render_plots_canada(dropdown):
     hovertemplate = (
             "<b>%{customdata[0]}</b><br>" +
             "Count: %{customdata[1]}"
@@ -294,6 +310,34 @@ def render_map_canada(dropdown):
         fig_choropleth.update_traces(
             customdata=np.stack((df_map_CA['province'], df_map_CA['Total Cases']), axis=-1),
             hovertemplate=hovertemplate
+        )
+        renamed_timeorder = df_timeorder.rename(
+            columns={'numtotal': 'Canada',
+                     'numtotal_Alberta': 'Alberta',
+                     'numtotal_British Columbia': 'British Columbia',
+                     'numtotal_Manitoba': 'Manitoba',
+                     'numtotal_New Brunswick': 'New Brunswick',
+                     'numtotal_Newfoundland and Labrador': 'Newfoundland and Labrador',
+                     'numtotal_Northwest Territories': 'Northwest Territories',
+                     'numtotal_Nova Scotia': 'Nova Scotia',
+                     'numtotal_Nunavut': 'Nunavut',
+                     'numtotal_Ontario': 'Ontario',
+                     'numtotal_Prince Edward Island': 'Prince Edward Island',
+                     'numtotal_Quebec': 'Quebec',
+                     'numtotal_Repatriated travellers': 'Repatriated travellers',
+                     'numtotal_Saskatchewan': 'Saskatchewan',
+                     'numtotal_Yukon': 'Yukon'}
+        )
+        fig_ts = px.line(
+            renamed_timeorder, x='date',
+            y=['Canada', 'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick', 'Newfoundland and Labrador',
+               'Northwest Territories', 'Nova Scotia', 'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec',
+               'Repatriated travellers', 'Saskatchewan', 'Yukon'],
+            labels={
+                'date': 'Date',
+                'value': 'Total Cases',
+                'variable': ' '
+            }
         )
     elif dropdown == 'numdeaths':
         fig_choropleth = px.choropleth_mapbox(
@@ -350,7 +394,11 @@ def render_map_canada(dropdown):
             hovertemplate=hovertemplate
         )
     fig_choropleth.update_layout(margin={'r': 0, 'l': 0, 'b': 0, 't': 0})
-    return fig_choropleth
+    fig_ts.update_layout(margin={'r': 0, 'l': 0, 'b': 0, 't': 0})
+    return fig_choropleth, fig_ts
+
+
+
 
 
 if __name__ == '__main__':
