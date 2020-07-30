@@ -149,11 +149,17 @@ tab_canada = html.Div([
         style={'margin-top': 15}
     ),
 
+    html.Hr(),
+
     dbc.Row(
         [
             dbc.Col(
+              [
+                  html.H3('Overview of Canada')
+              ]
+            ),
+            dbc.Col(
                 [
-                    html.Br(),
                     dcc.Dropdown(
                         id='stat-dropdown',
                         options=[
@@ -168,7 +174,7 @@ tab_canada = html.Div([
                 width=4
             ),
         ],
-        style={'margin-bottom': 10}
+        style={'margin-bottom': 10, 'margin-top': 20}
     ),
 
     dbc.Row([
@@ -179,9 +185,37 @@ tab_canada = html.Div([
                     width=12
                 )
             ],
-            style={'width': '100%', 'margin-bottom': 50}
+            style={'width': '100%', 'margin-bottom': 5, 'margin-top': 5}
         )
     ]),
+
+    html.Hr(),
+
+    dbc.Row(
+        [
+            dbc.Col(
+                html.H3('COVID-19 Timeline'),
+                width=9
+            ),
+            dbc.Col(
+                html.Div(
+                    [
+                        dcc.RadioItems(
+                            id='yaxis-scale',
+                            options=[
+                                {'label': ' Linear   ', 'value': 'Linear'},
+                                {'label': ' Log', 'value': 'log'}
+                            ],
+                            value='Linear',
+                            labelStyle={'display': 'block'}
+                        )
+                    ],
+                    style={'text-align': 'left'}
+                ),
+                width=3
+            )
+        ]
+    ),
 
     dbc.Row(
         html.Div(
@@ -191,9 +225,10 @@ tab_canada = html.Div([
                     width=12
                 )
             ],
-            style={'width': '100%', 'margin-bottom': 50}
+            style={'width': '100%', 'height': '100%', 'margin-bottom': 50}
         )
-    )
+    ),
+
 ])
 
 tab_world = html.Div([
@@ -286,8 +321,9 @@ def render_tab_content(tab):
 
 @app.callback([Output('choropleth-map', 'figure'),
                Output('timeseries', 'figure')],
-              [Input('stat-dropdown', 'value')])
-def render_plots_canada(dropdown):
+              [Input('stat-dropdown', 'value'),
+               Input('yaxis-scale', 'value')])
+def render_plots_canada(dropdown, yaxis_scale):
     hovertemplate = (
             "<b>%{customdata[0]}</b><br>" +
             "Count: %{customdata[1]}"
@@ -338,7 +374,9 @@ def render_plots_canada(dropdown):
                 'value': 'Total Cases',
                 'variable': ' '
             },
-            color_discrete_sequence=px.colors.qualitative.Light24
+            color_discrete_sequence=px.colors.qualitative.Light24,
+            hover_name='variable',
+            hover_data={'variable': False, 'value': ':.0f'}
         )
     elif dropdown == 'numdeaths':
         fig_choropleth = px.choropleth_mapbox(
@@ -385,7 +423,9 @@ def render_plots_canada(dropdown):
                 'value': 'Total Deaths',
                 'variable': ' '
             },
-            color_discrete_sequence=px.colors.qualitative.Light24
+            color_discrete_sequence=px.colors.qualitative.Light24,
+            hover_name='variable',
+            hover_data={'variable': False, 'value': ':.0f'}
         )
     elif dropdown == 'numtested':
         fig_choropleth = px.choropleth_mapbox(
@@ -432,7 +472,9 @@ def render_plots_canada(dropdown):
                 'value': 'Individuals Tested',
                 'variable': ' '
             },
-            color_discrete_sequence=px.colors.qualitative.Light24
+            color_discrete_sequence=px.colors.qualitative.Light24,
+            hover_name='variable',
+            hover_data={'variable': False, 'value': ':.0f'}
         )
     elif dropdown == 'numrecovered':
         fig_choropleth = px.choropleth_mapbox(
@@ -479,10 +521,25 @@ def render_plots_canada(dropdown):
                 'value': 'Cases Recovered',
                 'variable': ' '
             },
-            color_discrete_sequence=px.colors.qualitative.Light24
+            color_discrete_sequence=px.colors.qualitative.Light24,
+            hover_name='variable',
+            hover_data={'variable': False, 'value': ':.0f'}
         )
     fig_choropleth.update_layout(margin={'r': 0, 'l': 0, 'b': 0, 't': 0})
-    fig_ts.update_layout(margin={'r': 0, 'l': 0, 't': 0})
+    fig_ts.update_layout(margin={'r': 0, 'l': 0, 'b': 30, 't': 0},
+                         legend_title_text=None)
+    fig_ts.update_yaxes(type='linear' if yaxis_scale == 'Linear' else 'log')
+    fig_ts.update_xaxes(
+        rangeslider_visible=True,
+        rangeselector=dict(
+            buttons=list([
+                dict(count=1, label="1m", step="month", stepmode="backward"),
+                dict(count=3, label="3m", step="month", stepmode="backward"),
+                dict(count=6, label="6m", step="month", stepmode="backward"),
+                dict(step="all")
+            ])
+        )
+    )
     return fig_choropleth, fig_ts
 
 
