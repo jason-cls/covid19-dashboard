@@ -1,5 +1,6 @@
 from app import app
-from app import df_can, df_map_CA, df_timeorder, jdataNo
+from app import (df_can, df_map_CA, df_timeorder, jdataNo,
+                 df_map_world)
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
@@ -7,6 +8,17 @@ import numpy as np
 from layouts import tab_canada, tab_world, tab_ontario
 
 
+@app.callback(Output('tabs-content', 'children'),
+              [Input('tabs-granular', 'value')])
+def render_tab_content(tab):
+    if tab == 'tab-ca':
+        return tab_canada
+    elif tab == 'tab-int':
+        return tab_world
+    elif tab == 'tab-on':
+        return tab_ontario
+
+# ------------------------- CANADA ------------------------------
 @app.callback([Output('case-count', 'children'),
                Output('total-cases-region', 'children'),
                Output('death-count', 'children'),
@@ -41,17 +53,6 @@ def show_daily_counts(hoverData):
             recovery_count, total_recoveries_region)
 
 
-@app.callback(Output('tabs-content', 'children'),
-              [Input('tabs-granular', 'value')])
-def render_tab_content(tab):
-    if tab == 'tab-ca':
-        return tab_canada
-    elif tab == 'tab-int':
-        return tab_world
-    elif tab == 'tab-on':
-        return tab_ontario
-
-
 @app.callback([Output('choropleth-map', 'figure'),
                Output('timeseries', 'figure')],
               [Input('stat-dropdown', 'value'),
@@ -71,9 +72,9 @@ def render_plots_canada(dropdown, yaxis_scale):
             color='Total Cases',
             center={"lat": 59, "lon": -95.34},
             mapbox_style='carto-positron',
-            color_continuous_scale='emrld',
+            color_continuous_scale='reds',
             hover_name='province',
-            hover_data={'pr-id': False, 'Total Cases': ':.0f'},
+            hover_data={'pr-id': False, 'Total Cases': ':,0f'},
             zoom=2.5
         )
         fig_choropleth.update_traces(
@@ -109,7 +110,7 @@ def render_plots_canada(dropdown, yaxis_scale):
             },
             color_discrete_sequence=px.colors.qualitative.Light24,
             hover_name='variable',
-            hover_data={'variable': False, 'value': ':.0f'}
+            hover_data={'variable': False, 'value': ':,0f'}
         )
     elif dropdown == 'numdeaths':
         fig_choropleth = px.choropleth_mapbox(
@@ -120,9 +121,9 @@ def render_plots_canada(dropdown, yaxis_scale):
             color='Death Toll',
             center={"lat": 59, "lon": -95.34},
             mapbox_style='carto-positron',
-            color_continuous_scale='emrld',
+            color_continuous_scale='reds',
             hover_name='province',
-            hover_data={'pr-id': False, 'Total Cases': ':.0f'},
+            hover_data={'pr-id': False, 'Total Cases': ':,0f'},
             zoom=2.5
         )
         fig_choropleth.update_traces(
@@ -158,7 +159,7 @@ def render_plots_canada(dropdown, yaxis_scale):
             },
             color_discrete_sequence=px.colors.qualitative.Light24,
             hover_name='variable',
-            hover_data={'variable': False, 'value': ':.0f'}
+            hover_data={'variable': False, 'value': ':,0f'}
         )
     elif dropdown == 'numtested':
         fig_choropleth = px.choropleth_mapbox(
@@ -169,9 +170,9 @@ def render_plots_canada(dropdown, yaxis_scale):
             color='Test Count',
             center={"lat": 59, "lon": -95.34},
             mapbox_style='carto-positron',
-            color_continuous_scale='emrld',
+            color_continuous_scale='reds',
             hover_name='province',
-            hover_data={'pr-id': False, 'Total Cases': ':.0f'},
+            hover_data={'pr-id': False, 'Total Cases': ':,0f'},
             zoom=2.5
         )
         fig_choropleth.update_traces(
@@ -207,7 +208,7 @@ def render_plots_canada(dropdown, yaxis_scale):
             },
             color_discrete_sequence=px.colors.qualitative.Light24,
             hover_name='variable',
-            hover_data={'variable': False, 'value': ':.0f'}
+            hover_data={'variable': False, 'value': ':,0f'}
         )
     elif dropdown == 'numrecovered':
         fig_choropleth = px.choropleth_mapbox(
@@ -218,9 +219,9 @@ def render_plots_canada(dropdown, yaxis_scale):
             color='Recovery Count',
             center={"lat": 59, "lon": -95.34},
             mapbox_style='carto-positron',
-            color_continuous_scale='emrld',
+            color_continuous_scale='reds',
             hover_name='province',
-            hover_data={'pr-id': False, 'Total Cases': ':.0f'},
+            hover_data={'pr-id': False, 'Total Cases': ':,0f'},
             zoom=2.5
         )
         fig_choropleth.update_traces(
@@ -256,7 +257,7 @@ def render_plots_canada(dropdown, yaxis_scale):
             },
             color_discrete_sequence=px.colors.qualitative.Light24,
             hover_name='variable',
-            hover_data={'variable': False, 'value': ':.0f'}
+            hover_data={'variable': False, 'value': ':,0f'}
         )
     fig_choropleth.update_layout(margin={'r': 0, 'l': 0, 'b': 0, 't': 0})
     fig_ts.update_layout(margin={'r': 0, 'l': 0, 'b': 30, 't': 0},
@@ -274,3 +275,42 @@ def render_plots_canada(dropdown, yaxis_scale):
         )
     )
     return fig_choropleth, fig_ts
+
+
+# ------------------------- WORLD ------------------------------
+@app.callback(Output('choropleth-map-world', 'figure'),
+              [Input('world-stat-dropdown', 'value')])
+def render_plots_world(dropdown):
+    fig_choropleth = px.choropleth_mapbox()
+    if dropdown == 'numtotalWorld':
+        fig_choropleth = px.choropleth(
+            df_map_world,
+            color='Total Cases',
+            locations='iso_code',
+            locationmode='ISO-3',
+            scope='world',
+            hover_name='Country',
+            hover_data={'iso_code': False, 'Total Cases': ':,0f'}
+        )
+    elif dropdown == 'numdeathsWorld':
+        fig_choropleth = px.choropleth(
+            df_map_world,
+            color='Death Toll',
+            locations='iso_code',
+            locationmode='ISO-3',
+            scope='world',
+            hover_name='Country',
+            hover_data={'iso_code': False, 'Death Toll': ':,0f'}
+        )
+    elif dropdown == 'numtestedWorld':
+        fig_choropleth = px.choropleth(
+            df_map_world,
+            color='Test Count',
+            locations='iso_code',
+            locationmode='ISO-3',
+            scope='world',
+            hover_name='Country',
+            hover_data={'iso_code': False, 'Test Count': ':,0f'}
+        )
+    fig_choropleth.update_layout(margin={'r': 0, 'l': 0, 'b': 0, 't': 0})
+    return fig_choropleth

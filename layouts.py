@@ -175,7 +175,44 @@ tab_canada = html.Div([
 ])
 
 tab_world = html.Div([
-    html.P('PLACEHOLDER TEXT WORLD')
+    dbc.Row(
+        [
+            dbc.Col(
+                [
+                    html.H3('Global Overview')
+                ]
+            ),
+            dbc.Col(
+                [
+                    dcc.Dropdown(
+                        id='world-stat-dropdown',
+                        options=[
+                            {'label': 'Total Cases', 'value': 'numtotalWorld'},
+                            {'label': 'Total Deaths', 'value': 'numdeathsWorld'},
+                            {'label': 'Individuals Tested', 'value': 'numtestedWorld'}
+                        ],
+                        value='numtotalWorld'
+                    )
+                ],
+                width=4
+            ),
+        ],
+        style={'margin-bottom': 10, 'margin-top': 20}
+    ),
+
+    dbc.Row([
+        html.Div(
+            [
+                dbc.Col(
+                    dcc.Graph(id='choropleth-map-world', clear_on_unhover=True),
+                    width=12
+                )
+            ],
+            style={'width': '100%', 'margin-bottom': 5, 'margin-top': 5}
+        )
+    ]),
+
+    html.Hr(),
 ])
 
 tab_ontario = html.Div([

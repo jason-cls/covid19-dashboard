@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 from geojson_rewind import rewind
 import json
 import pandas as pd
+import numpy as np
 import os
 
 external_stylesheets = [dbc.themes.LUX,
@@ -53,3 +54,27 @@ for region in pd.unique(df_can['prname']):
         df_region = df_can.loc[df_can['prname'] == region]
         df_timeorder = df_timeorder.merge(df_region, on='date', how='outer', suffixes=[None, '_' + region])
         last_loc = region
+
+
+#### World Geo Data ####
+path_world = os.path.join(os.getcwd(), 'data', 'covid19world.csv')
+df_world = pd.read_csv(path_world, parse_dates=['date'])
+
+map_info_world = {
+    'iso_code': [],
+    'Country': [],
+    'Total Cases': [],
+    'Death Toll': [],
+    'Test Count': []
+}
+
+for iso in pd.unique(df_world['iso_code']):
+    if iso != 'OWID_WRL':
+        map_info_world['iso_code'].append(iso)
+        df_loc = df_world.loc[df_world['iso_code'] == iso]
+        map_info_world['Country'].append(df_loc['location'].values[-1])  # index latest value (already sorted by date)
+        map_info_world['Total Cases'].append(df_loc['total_cases'].values[-1])
+        map_info_world['Death Toll'].append(df_loc['total_deaths'].values[-1])
+        map_info_world['Test Count'].append(df_loc['total_tests'].values[-1])
+
+df_map_world = pd.DataFrame(map_info_world)

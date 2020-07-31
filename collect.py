@@ -41,7 +41,18 @@ response_world = response_world.drop(
              'male_smokers', 'handwashing_facilities', 'life_expectancy']
 )
 
+response_world = response_world.loc[response_world['location'] != 'International']
 response_world['date'] = pd.to_datetime(response_world['date'], yearfirst=True)
 response_world = response_world.sort_values(by=['location', 'date'])
+
+# Impute missing values
+locations = pd.unique(response_world['location'])
+impute_cols = ['new_tests', 'total_tests', 'total_tests_per_thousand', 'new_tests_per_thousand']
+
+for loc in locations:
+    for colname in impute_cols:
+        response_world.loc[response_world['location'] == loc, colname] = \
+            response_world.loc[response_world['location'] == loc, colname].ffill()
+
 # Save data
 response_world.to_csv(path_world, index=False)
