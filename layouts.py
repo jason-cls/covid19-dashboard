@@ -176,6 +176,70 @@ tab_canada = html.Div([
 
 tab_world = html.Div([
     dbc.Row(
+        dbc.Col(
+            [
+                dbc.CardGroup(
+                    [
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H2(id='case-count-country', className="card-title", style={'font-weight': 'bold',
+                                                                                            'text-align': 'center'}),
+                                    html.H5("cases today", className="card-title", style={'font-weight': 'bold',
+                                                                                          'text-align': 'center'}),
+                                    html.Br(),
+                                    html.P(
+                                        id='total-cases-country',
+                                        className="card-text"
+                                    )
+                                ]
+                            ),
+                            color='warning',
+                            inverse=True
+                        ),
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H2(id='death-count-country', className="card-title", style={'font-weight': 'bold',
+                                                                                             'text-align': 'center'}),
+                                    html.H5("deaths today", className="card-title",
+                                            style={'font-weight': 'bold', 'text-align': 'center'}),
+                                    html.Br(),
+                                    html.P(
+                                        id='total-deaths-country',
+                                        className="card-text"
+                                    )
+                                ]
+                            ),
+                            color='danger',
+                            inverse=True
+                        ),
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H2(id='test-count-country', className="card-title",
+                                            style={'font-weight': 'bold', 'text-align': 'center'}),
+                                    html.H5("individuals tested today", className="card-title",
+                                            style={'font-weight': 'bold', 'text-align': 'center'}),
+                                    html.Br(),
+                                    html.P(
+                                        id='total-tests-country',
+                                        className="card-text"
+                                    )
+                                ]
+                            ),
+                            color='info',
+                            inverse=True
+                        )
+                    ]
+                )
+            ],
+            width=12
+        ),
+        style={'margin-top': 15}
+    ),
+
+    dbc.Row(
         [
             dbc.Col(
                 [

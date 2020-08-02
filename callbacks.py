@@ -1,6 +1,6 @@
 from app import app
 from app import (df_can, df_map_CA, df_timeorder, jdataNo,
-                 df_map_world)
+                 df_world, df_map_world)
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
@@ -34,15 +34,15 @@ def show_daily_counts(hoverData):
     else:
         region_name = 'Canada'
 
-    case_count = str(int(df_can.loc[df_can['prname'] == region_name, 'numtoday'].values[-1]))
-    death_count = str(int(df_can.loc[df_can['prname'] == region_name, 'deathstoday'].values[-1]))
-    test_count = str(int(df_can.loc[df_can['prname'] == region_name, 'testedtoday'].values[-1]))
-    recovery_count = str(int(df_can.loc[df_can['prname'] == region_name, 'recoveredtoday'].values[-1]))
+    case_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numtoday'].values[-1]))
+    death_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'deathstoday'].values[-1]))
+    test_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'testedtoday'].values[-1]))
+    recovery_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'recoveredtoday'].values[-1]))
 
-    total_cases = str(df_can.loc[df_can['prname'] == region_name, 'numtotal'].values[-1])
-    total_deaths = str(int(df_can.loc[df_can['prname'] == region_name, 'numdeaths'].values[-1]))
-    total_tests = str(int(df_can.loc[df_can['prname'] == region_name, 'numtested'].values[-1]))
-    total_recoveries = str(int(df_can.loc[df_can['prname'] == region_name, 'numrecover'].values[-1]))
+    total_cases = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numtotal'].values[-1]))
+    total_deaths = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numdeaths'].values[-1]))
+    total_tests = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numtested'].values[-1]))
+    total_recoveries = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numrecover'].values[-1]))
 
     total_cases_region = [total_cases + " total cases in ", html.Br(), region_name]
     total_deaths_region = [total_deaths + " total deaths in ", html.Br(), region_name]
@@ -278,6 +278,52 @@ def render_plots_canada(dropdown, yaxis_scale):
 
 
 # ------------------------- WORLD ------------------------------
+@app.callback([Output('case-count-country', 'children'),
+               Output('total-cases-country', 'children'),
+               Output('death-count-country', 'children'),
+               Output('total-deaths-country', 'children'),
+               Output('test-count-country', 'children'),
+               Output('total-tests-country', 'children')],
+              [Input('choropleth-map-world', 'hoverData')])
+def show_daily_counts_world(hoverData):
+    if hoverData:
+        region_name = hoverData['points'][0]['hovertext']
+    else:
+        region_name = 'World'
+
+    try:
+        case_count = '{:,}'.format(int(df_world.loc[df_world['location'] == region_name, 'new_cases'].values[-1]))
+    except (ValueError, IndexError):
+        case_count = 'N/A'
+    try:
+        death_count = '{:,}'.format(int(df_world.loc[df_world['location'] == region_name, 'new_deaths'].values[-1]))
+    except (ValueError, IndexError):
+        death_count = 'N/A'
+    try:
+        test_count = '{:,}'.format(int(df_world.loc[df_world['location'] == region_name, 'new_tests'].values[-1]))
+    except (ValueError, IndexError):
+        test_count = 'N/A'
+
+    try:
+        total_cases = '{:,}'.format(int(df_world.loc[df_world['location'] == region_name, 'total_cases'].values[-1]))
+    except (ValueError, IndexError):
+        total_cases = 'N/A'
+    try:
+        total_deaths = '{:,}'.format(int(df_world.loc[df_world['location'] == region_name, 'total_deaths'].values[-1]))
+    except (ValueError, IndexError):
+        total_deaths = 'N/A'
+    try:
+        total_tests = '{:,}'.format(int(df_world.loc[df_world['location'] == region_name, 'total_tests'].values[-1]))
+    except (ValueError, IndexError):
+        total_tests = 'N/A'
+
+    total_cases_country = [total_cases + " total cases in ", html.Br(), region_name]
+    total_deaths_country = [total_deaths + " total deaths in ", html.Br(), region_name]
+    total_tests_country = [total_tests + " total tested in ", html.Br(), region_name]
+
+    return case_count, total_cases_country, death_count, total_deaths_country, test_count, total_tests_country
+
+
 @app.callback(Output('choropleth-map-world', 'figure'),
               [Input('world-stat-dropdown', 'value')])
 def render_plots_world(dropdown):
