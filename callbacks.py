@@ -1,9 +1,10 @@
 from app import app
 from app import (df_can, df_map_CA, df_timeorder, jdataNo,
-                 df_world, df_map_world)
+                 df_world, df_map_world, df_timeorder_world)
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
+import pandas as pd
 import numpy as np
 from layouts import tab_canada, tab_world, tab_ontario
 
@@ -324,10 +325,19 @@ def show_daily_counts_world(hoverData):
     return case_count, total_cases_country, death_count, total_deaths_country, test_count, total_tests_country
 
 
-@app.callback(Output('choropleth-map-world', 'figure'),
-              [Input('world-stat-dropdown', 'value')])
-def render_plots_world(dropdown):
+@app.callback([Output('choropleth-map-world', 'figure'),
+               Output('timeseries-world', 'figure')],
+              [Input('world-stat-dropdown', 'value'),
+               Input('yaxis-scale-world-timeline', 'value'),
+               Input('country-dropdown', 'value')])
+def render_plots_world(dropdown, yaxis_scale, locations):
     fig_choropleth = px.choropleth_mapbox()
+    # locations = list(pd.unique(df_world['location']))
+    # locations.remove('World')
+    world_removed = False
+    if 'World' in locations:
+        locations.remove('World')
+        world_removed = True
     if dropdown == 'numtotalWorld':
         fig_choropleth = px.choropleth(
             df_map_world,
@@ -337,6 +347,24 @@ def render_plots_world(dropdown):
             scope='world',
             hover_name='Country',
             hover_data={'iso_code': False, 'Total Cases': ':,0f'}
+        )
+        rename_map = {'total_cases_'+loc: loc for loc in locations}
+        rename_map['total_cases'] = 'World'
+        renamed_timeorder = df_timeorder_world.rename(
+            columns=rename_map
+        )
+        fig_ts = px.line(
+            renamed_timeorder, x='date',
+            # y=['World']+locations,
+            y=['World']+locations if world_removed else locations,
+            labels={
+                'date': 'Date',
+                'value': 'Total Cases',
+                'variable': ' '
+            },
+            color_discrete_sequence=px.colors.qualitative.Light24,
+            hover_name='variable',
+            hover_data={'variable': False, 'value': ':,0f'}
         )
     elif dropdown == 'numdeathsWorld':
         fig_choropleth = px.choropleth(
@@ -348,6 +376,24 @@ def render_plots_world(dropdown):
             hover_name='Country',
             hover_data={'iso_code': False, 'Death Toll': ':,0f'}
         )
+        rename_map = {'total_deaths_' + loc: loc for loc in locations}
+        rename_map['total_deaths'] = 'World'
+        renamed_timeorder = df_timeorder_world.rename(
+            columns=rename_map
+        )
+        fig_ts = px.line(
+            renamed_timeorder, x='date',
+            # y=['World']+locations,
+            y=['World'] + locations if world_removed else locations,
+            labels={
+                'date': 'Date',
+                'value': 'Total Deaths',
+                'variable': ' '
+            },
+            color_discrete_sequence=px.colors.qualitative.Light24,
+            hover_name='variable',
+            hover_data={'variable': False, 'value': ':,0f'}
+        )
     elif dropdown == 'numtestedWorld':
         fig_choropleth = px.choropleth(
             df_map_world,
@@ -358,5 +404,37 @@ def render_plots_world(dropdown):
             hover_name='Country',
             hover_data={'iso_code': False, 'Test Count': ':,0f'}
         )
+        rename_map = {'total_tests_' + loc: loc for loc in locations}
+        rename_map['total_tests'] = 'World'
+        renamed_timeorder = df_timeorder_world.rename(
+            columns=rename_map
+        )
+        fig_ts = px.line(
+            renamed_timeorder, x='date',
+            # y=['World']+locations,
+            y=['World'] + locations if world_removed else locations,
+            labels={
+                'date': 'Date',
+                'value': 'Individuals Tested',
+                'variable': ' '
+            },
+            color_discrete_sequence=px.colors.qualitative.Light24,
+            hover_name='variable',
+            hover_data={'variable': False, 'value': ':,0f'}
+        )
     fig_choropleth.update_layout(margin={'r': 0, 'l': 0, 'b': 0, 't': 0})
-    return fig_choropleth
+    fig_ts.update_layout(margin={'r': 0, 'l': 0, 'b': 30, 't': 0},
+                         legend_title_text=None)
+    fig_ts.update_yaxes(type='linear' if yaxis_scale == 'Linear' else 'log')
+    fig_ts.update_xaxes(
+        rangeslider_visible=True,
+        rangeselector=dict(
+            buttons=list([
+                dict(count=1, label="1m", step="month", stepmode="backward"),
+                dict(count=3, label="3m", step="month", stepmode="backward"),
+                dict(count=6, label="6m", step="month", stepmode="backward"),
+                dict(step="all")
+            ])
+        )
+    )
+    return fig_choropleth, fig_ts

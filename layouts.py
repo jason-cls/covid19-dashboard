@@ -1,6 +1,8 @@
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
+import pandas as pd
+from app import df_world
 
 tab_canada = html.Div([
     dbc.Row(
@@ -137,7 +139,7 @@ tab_canada = html.Div([
     dbc.Row(
         [
             dbc.Col(
-                html.H3('COVID-19 Timeline'),
+                html.H3('COVID-19 Canadian Timeline'),
                 width=9
             ),
             dbc.Col(
@@ -173,6 +175,8 @@ tab_canada = html.Div([
     ),
 
 ])
+
+world_locations = list(pd.unique(df_world['location']))
 
 tab_world = html.Div([
     dbc.Row(
@@ -277,6 +281,58 @@ tab_world = html.Div([
     ]),
 
     html.Hr(),
+
+    dbc.Row(
+        [
+            dbc.Col(
+                html.H3('COVID-19 Global Timeline'),
+                width=10
+            ),
+
+            dbc.Col(
+                html.Div(
+                    [
+                        dcc.RadioItems(
+                            id='yaxis-scale-world-timeline',
+                            options=[
+                                {'label': ' Linear   ', 'value': 'Linear'},
+                                {'label': ' Log', 'value': 'log'}
+                            ],
+                            value='Linear',
+                            labelStyle={'display': 'block'}
+                        )
+                    ],
+                    style={'text-align': 'left'}
+                ),
+                width=2
+            )
+        ]
+    ),
+
+    dbc.Row(
+        dbc.Col(
+            dcc.Dropdown(
+                id='country-dropdown',
+                options=[{'label': loc, 'value': loc} for loc in world_locations],
+                value=['World', 'United States', 'Canada', 'China', 'United Kingdom',
+                       'Italy', 'Russia', 'South Korea', 'Japan'],
+                multi=True
+            )
+        ),
+        style={'margin-bottom': 15}
+    ),
+
+    dbc.Row(
+        html.Div(
+            [
+                dbc.Col(
+                    dcc.Graph(id='timeseries-world', responsive=True),
+                    width=12
+                )
+            ],
+            style={'width': '100%', 'height': '100%', 'margin-bottom': 50}
+        )
+    ),
 ])
 
 tab_ontario = html.Div([

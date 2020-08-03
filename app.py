@@ -3,7 +3,6 @@ import dash_bootstrap_components as dbc
 from geojson_rewind import rewind
 import json
 import pandas as pd
-import numpy as np
 import os
 
 external_stylesheets = [dbc.themes.LUX,
@@ -78,3 +77,12 @@ for iso in pd.unique(df_world['iso_code']):
         map_info_world['Test Count'].append(df_loc['total_tests'].values[-1])
 
 df_map_world = pd.DataFrame(map_info_world)
+
+# Timeseries data
+df_timeorder_world = df_world.loc[df_world['location'] == 'World']
+last_loc = 'World'
+for loc in pd.unique(df_world['location']):
+    if loc != 'World':
+        df_country = df_world.loc[df_world['location'] == loc]
+        df_timeorder_world = df_timeorder_world.merge(df_country, on='date', how='outer', suffixes=[None, '_' + loc])
+        last_loc = loc
