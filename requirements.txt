@@ -16,7 +16,6 @@ Fiona==1.8.13
 Flask==1.1.2
 Flask-Compress==1.5.0
 future==0.18.2
-GDAL==3.0.4
 geojson-rewind==0.2.0
 geopandas==0.8.1
 gunicorn==20.0.4
