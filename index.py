@@ -2,9 +2,14 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from app import app
+from random import randint
 import callbacks
 import os
+import flask
 
+
+server = flask.Flask(__name__)
+server.secret_key = os.environ.get('secret_key', str(randint(0, 1000000)))
 
 with open(os.path.join(os.getcwd(), 'data', 'lastUpdate.txt'), 'r') as textfile:
     lastUpdate = textfile.read()
