@@ -63,4 +63,4 @@ response_world.to_csv(path_world, index=False)
 logfile = os.path.join(os.getcwd(), 'data', 'lastUpdate.txt')
 utc_datetime = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M')
 with open(logfile, 'w') as textfile:
-    textfile.write('Last Update: %s' % utc_datetime)
+    textfile.write('Last Update: %s UTC' % utc_datetime)

@@ -1,13 +1,17 @@
 import dash
 import dash_bootstrap_components as dbc
+import flask
 from geojson_rewind import rewind
 import json
 import pandas as pd
+from random import randint
 import os
 
 external_stylesheets = [dbc.themes.LUX,
                         "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/font-awesome.min.css"]
 
+server = flask.Flask(__name__)
+server.secret_key = os.environ.get('secret_key', str(randint(0, 1000000)))
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.config['suppress_callback_exceptions'] = True
 app.title = 'COVID-19 Dashboard'
