@@ -11,7 +11,7 @@ canada-geo.json
 # gitignore template for Jupyter Notebooks
 # website: http://jupyter.org/
 
-.ipynb
+*.ipynb
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 
