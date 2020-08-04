@@ -6,7 +6,7 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
 import numpy as np
-from layouts import tab_canada, tab_world, tab_ontario
+from layouts import tab_canada, tab_world
 
 
 @app.callback(Output('tabs-content', 'children'),
@@ -16,8 +16,6 @@ def render_tab_content(tab):
         return tab_canada
     elif tab == 'tab-int':
         return tab_world
-    elif tab == 'tab-on':
-        return tab_ontario
 
 # ------------------------- CANADA ------------------------------
 @app.callback([Output('case-count', 'children'),
@@ -38,7 +36,7 @@ def show_daily_counts(hoverData):
     case_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numtoday'].values[-1]))
     death_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'deathstoday'].values[-1]))
     test_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'testedtoday'].values[-1]))
-    recovery_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'recoveredtoday'].values[-1]))
+    recovery_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numrecoveredtoday'].values[-1]))
 
     total_cases = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numtotal'].values[-1]))
     total_deaths = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numdeaths'].values[-1]))

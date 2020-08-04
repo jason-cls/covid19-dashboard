@@ -187,8 +187,8 @@ tab_world = html.Div([
                         dbc.Card(
                             dbc.CardBody(
                                 [
-                                    html.H2(id='case-count-country', className="card-title", style={'font-weight': 'bold',
-                                                                                            'text-align': 'center'}),
+                                    html.H2(id='case-count-country', className="card-title",
+                                            style={'font-weight': 'bold', 'text-align': 'center'}),
                                     html.H5("cases today", className="card-title", style={'font-weight': 'bold',
                                                                                           'text-align': 'center'}),
                                     html.Br(),
@@ -204,8 +204,8 @@ tab_world = html.Div([
                         dbc.Card(
                             dbc.CardBody(
                                 [
-                                    html.H2(id='death-count-country', className="card-title", style={'font-weight': 'bold',
-                                                                                             'text-align': 'center'}),
+                                    html.H2(id='death-count-country', className="card-title",
+                                            style={'font-weight': 'bold', 'text-align': 'center'}),
                                     html.H5("deaths today", className="card-title",
                                             style={'font-weight': 'bold', 'text-align': 'center'}),
                                     html.Br(),
@@ -333,8 +333,4 @@ tab_world = html.Div([
             style={'width': '100%', 'height': '100%', 'margin-bottom': 50}
         )
     ),
-])
-
-tab_ontario = html.Div([
-    html.P('PLACEHOLDER TEXT ONTARIO')
 ])

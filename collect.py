@@ -1,3 +1,4 @@
+import datetime
 import pandas as pd
 import os
 
@@ -17,7 +18,7 @@ response = response.sort_values(by=['prname', 'date'])
 # Impute missing values
 provinces = response['prname'].value_counts().index
 impute_cols = ['numdeaths', 'numtested', 'deathstoday',
-               'testedtoday', 'recoveredtoday', 'numrecover', 'percentrecover']
+               'testedtoday', 'numrecoveredtoday', 'numrecover', 'percentrecover']
 
 for p in provinces:
     for colname in impute_cols:
@@ -56,3 +57,10 @@ for loc in locations:
 
 # Save data
 response_world.to_csv(path_world, index=False)
+
+
+# Log date & time
+logfile = os.path.join(os.getcwd(), 'data', 'lastUpdate.txt')
+utc_datetime = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M')
+with open(logfile, 'w') as textfile:
+    textfile.write('Last Update: %s' % utc_datetime)
