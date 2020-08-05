@@ -21,81 +21,90 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=serv
 app.config['suppress_callback_exceptions'] = True
 app.title = 'COVID-19 Dashboard'
 
-
-
-path_ca = os.path.join(os.getcwd(), 'data', 'covid19canada.csv')
-df_can = pd.read_csv(path_ca, parse_dates=['date'])
-
 # Process geodata for Canada choropleth map
 path_geo_ca = os.path.join(os.getcwd(), 'data', 'ca_geodata', 'canada-geo-simple.json')
 with open(path_geo_ca) as geofile:
     jdataNo = json.load(geofile)
 
 jdataNo = rewind(jdataNo, rfc7946=False)  # geojson formatting
-
-map_info_CA = {
-    'pr-id': [],
-    'province': [],
-    'Total Cases': [],
-    'Death Toll': [],
-    'Test Count': [],
-    'Recovery Count': []
-}
-for k in range(len(jdataNo['features'])):
-    jdataNo['features'][k]['properties']['id'] = k
-    name = jdataNo['features'][k]['properties']['NAME_1']
-    if name.startswith('Qu'):
-        name = 'Quebec'  # Remove french accents in text
-    map_info_CA['pr-id'].append(k)
-    map_info_CA['province'].append(name)
-    df_pr = df_can.loc[df_can['prname'] == name]
-    map_info_CA['Total Cases'].append(df_pr['numtotal'].values[-1])  # index latest value (already sorted by date)
-    map_info_CA['Death Toll'].append(df_pr['numdeaths'].values[-1])
-    map_info_CA['Test Count'].append(df_pr['numtested'].values[-1])
-    map_info_CA['Recovery Count'].append(df_pr['numrecover'].values[-1])
-
-df_map_CA = pd.DataFrame(map_info_CA)
-
-# Timeseries data
-df_timeorder = df_can.loc[df_can['prname'] == 'Canada']
-last_loc = 'Canada'
-for region in pd.unique(df_can['prname']):
-    if region != 'Canada':
-        df_region = df_can.loc[df_can['prname'] == region]
-        df_timeorder = df_timeorder.merge(df_region, on='date', how='outer', suffixes=[None, '_' + region])
-        last_loc = region
-
-#### World Geo Data ####
+path_ca = os.path.join(os.getcwd(), 'data', 'covid19canada.csv')
 path_world = os.path.join(os.getcwd(), 'data', 'covid19world.csv')
-df_world = pd.read_csv(path_world, parse_dates=['date'])
 
-map_info_world = {
-    'iso_code': [],
-    'Country': [],
-    'Total Cases': [],
-    'Death Toll': [],
-    'Test Count': []
-}
 
-for iso in pd.unique(df_world['iso_code']):
-    if iso != 'OWID_WRL':
-        map_info_world['iso_code'].append(iso)
-        df_loc = df_world.loc[df_world['iso_code'] == iso]
-        map_info_world['Country'].append(df_loc['location'].values[-1])  # index latest value (already sorted by date)
-        map_info_world['Total Cases'].append(df_loc['total_cases'].values[-1])
-        map_info_world['Death Toll'].append(df_loc['total_deaths'].values[-1])
-        map_info_world['Test Count'].append(df_loc['total_tests'].values[-1])
+def get_data():
+    df_can = pd.read_csv(path_ca, parse_dates=['date'])
 
-df_map_world = pd.DataFrame(map_info_world)
+    map_info_CA = {
+        'pr-id': [],
+        'province': [],
+        'Total Cases': [],
+        'Death Toll': [],
+        'Test Count': [],
+        'Recovery Count': []
+    }
+    for k in range(len(jdataNo['features'])):
+        jdataNo['features'][k]['properties']['id'] = k
+        name = jdataNo['features'][k]['properties']['NAME_1']
+        if name.startswith('Qu'):
+            name = 'Quebec'  # Remove french accents in text
+        map_info_CA['pr-id'].append(k)
+        map_info_CA['province'].append(name)
+        df_pr = df_can.loc[df_can['prname'] == name]
+        map_info_CA['Total Cases'].append(df_pr['numtotal'].values[-1])  # index latest value (already sorted by date)
+        map_info_CA['Death Toll'].append(df_pr['numdeaths'].values[-1])
+        map_info_CA['Test Count'].append(df_pr['numtested'].values[-1])
+        map_info_CA['Recovery Count'].append(df_pr['numrecover'].values[-1])
 
-# Timeseries data
-df_timeorder_world = df_world.loc[df_world['location'] == 'World']
-last_loc = 'World'
-for loc in pd.unique(df_world['location']):
-    if loc != 'World':
-        df_country = df_world.loc[df_world['location'] == loc]
-        df_timeorder_world = df_timeorder_world.merge(df_country, on='date', how='outer', suffixes=[None, '_' + loc])
-        last_loc = loc
+    df_map_CA = pd.DataFrame(map_info_CA)
+
+    # Timeseries data
+    df_timeorder = df_can.loc[df_can['prname'] == 'Canada']
+    last_loc = 'Canada'
+    for region in pd.unique(df_can['prname']):
+        if region != 'Canada':
+            df_region = df_can.loc[df_can['prname'] == region]
+            df_timeorder = df_timeorder.merge(df_region, on='date', how='outer', suffixes=[None, '_' + region])
+            last_loc = region
+
+    #### World Geo Data ####
+    df_world = pd.read_csv(path_world, parse_dates=['date'])
+
+    map_info_world = {
+        'iso_code': [],
+        'Country': [],
+        'Total Cases': [],
+        'Death Toll': [],
+        'Test Count': []
+    }
+
+    for iso in pd.unique(df_world['iso_code']):
+        if iso != 'OWID_WRL':
+            map_info_world['iso_code'].append(iso)
+            df_loc = df_world.loc[df_world['iso_code'] == iso]
+            map_info_world['Country'].append(
+                df_loc['location'].values[-1])  # index latest value (already sorted by date)
+            map_info_world['Total Cases'].append(df_loc['total_cases'].values[-1])
+            map_info_world['Death Toll'].append(df_loc['total_deaths'].values[-1])
+            map_info_world['Test Count'].append(df_loc['total_tests'].values[-1])
+
+    df_map_world = pd.DataFrame(map_info_world)
+    world_locations = list(pd.unique(df_world['location']))
+
+    # Timeseries data
+    df_timeorder_world = df_world.loc[df_world['location'] == 'World']
+    last_loc = 'World'
+    for loc in pd.unique(df_world['location']):
+        if loc != 'World':
+            df_country = df_world.loc[df_world['location'] == loc]
+            df_timeorder_world = df_timeorder_world.merge(df_country, on='date', how='outer',
+                                                          suffixes=[None, '_' + loc])
+            last_loc = loc
+
+    return df_can, df_map_CA, df_timeorder, df_world, df_map_world, df_timeorder_world, world_locations
+
+
+# Initialize global variables
+df_can, df_map_CA, df_timeorder, df_world, df_map_world, df_timeorder_world, world_locations = get_data()
 
 tab_canada = html.Div([
     dbc.Row(
@@ -269,8 +278,6 @@ tab_canada = html.Div([
 
 ])
 
-world_locations = list(pd.unique(df_world['location']))
-
 tab_world = html.Div([
     dbc.Row(
         dbc.Col(
@@ -430,6 +437,8 @@ tab_world = html.Div([
 
 
 def serve_layout():
+    # Update latest data on refresh
+    df_can, df_map_CA, df_timeorder, df_world, df_map_world, df_timeorder_world, world_locations = get_data()
     with open(os.path.join(os.getcwd(), 'data', 'lastUpdate.txt'), 'r') as textfile:
         lastUpdate = textfile.read()
     return dbc.Container(
@@ -499,8 +508,8 @@ def show_daily_counts(hoverData):
         region_name = 'Canada'
 
     case_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numtoday'].values[-1]))
-    death_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'deathstoday'].values[-1]))
-    test_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'testedtoday'].values[-1]))
+    death_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numdeathstoday'].values[-1]))
+    test_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numtestedtoday'].values[-1]))
     recovery_count = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numrecoveredtoday'].values[-1]))
 
     total_cases = '{:,}'.format(int(df_can.loc[df_can['prname'] == region_name, 'numtotal'].values[-1]))
@@ -795,8 +804,6 @@ def show_daily_counts_world(hoverData):
                Input('country-dropdown', 'value')])
 def render_plots_world(dropdown, yaxis_scale, locations):
     fig_choropleth = px.choropleth_mapbox()
-    # locations = list(pd.unique(df_world['location']))
-    # locations.remove('World')
     world_removed = False
     if 'World' in locations:
         locations.remove('World')
@@ -818,7 +825,6 @@ def render_plots_world(dropdown, yaxis_scale, locations):
         )
         fig_ts = px.line(
             renamed_timeorder, x='date',
-            # y=['World']+locations,
             y=['World'] + locations if world_removed else locations,
             labels={
                 'date': 'Date',
