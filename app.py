@@ -12,7 +12,6 @@ import plotly.express as px
 from random import randint
 import os
 
-
 external_stylesheets = [dbc.themes.LUX,
                         "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/font-awesome.min.css"]
 
@@ -67,7 +66,6 @@ for region in pd.unique(df_can['prname']):
         df_timeorder = df_timeorder.merge(df_region, on='date', how='outer', suffixes=[None, '_' + region])
         last_loc = region
 
-
 #### World Geo Data ####
 path_world = os.path.join(os.getcwd(), 'data', 'covid19world.csv')
 df_world = pd.read_csv(path_world, parse_dates=['date'])
@@ -99,9 +97,6 @@ for loc in pd.unique(df_world['location']):
         df_country = df_world.loc[df_world['location'] == loc]
         df_timeorder_world = df_timeorder_world.merge(df_country, on='date', how='outer', suffixes=[None, '_' + loc])
         last_loc = loc
-
-
-
 
 tab_canada = html.Div([
     dbc.Row(
@@ -198,9 +193,9 @@ tab_canada = html.Div([
     dbc.Row(
         [
             dbc.Col(
-              [
-                  html.H3('Overview of Canada')
-              ]
+                [
+                    html.H3('Overview of Canada')
+                ]
             ),
             dbc.Col(
                 [
@@ -225,7 +220,7 @@ tab_canada = html.Div([
         html.Div(
             [
                 dbc.Col(
-                    dcc.Graph(id='choropleth-map',  clear_on_unhover=True),
+                    dcc.Graph(id='choropleth-map', clear_on_unhover=True),
                     width=12
                 )
             ],
@@ -434,42 +429,47 @@ tab_world = html.Div([
     ),
 ])
 
-app.layout = dbc.Container(
-    [
-        dbc.Row(
-            [
-                dbc.Col(
-                    [
-                        html.H1('COVID-19 Dashboard'),
-                        html.P(lastUpdate)
-                    ],
 
-                    width=6
-                ),
-                dbc.Col(
-                    html.Div(
-                        dcc.Tabs(id='tabs-granular', value='tab-ca', children=[
-                            dcc.Tab(label='Canada', value='tab-ca'),
-                            dcc.Tab(label='World', value='tab-int')
-                        ]),
+def serve_layout():
+    return dbc.Container(
+        [
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            html.H1('COVID-19 Dashboard'),
+                            html.P(lastUpdate)
+                        ],
+
+                        width=6
                     ),
-                    width=6,
-                    align='end'
-                )
-            ],
-            style={'margin-top': 15}
-        ),
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.Div(id='tabs-content'),
-                    width=12
-                )
-            ],
-            style={'margin-top': 15}
-        )
-    ]
-)
+                    dbc.Col(
+                        html.Div(
+                            dcc.Tabs(id='tabs-granular', value='tab-ca', children=[
+                                dcc.Tab(label='Canada', value='tab-ca'),
+                                dcc.Tab(label='World', value='tab-int')
+                            ]),
+                        ),
+                        width=6,
+                        align='end'
+                    )
+                ],
+                style={'margin-top': 15}
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        html.Div(id='tabs-content'),
+                        width=12
+                    )
+                ],
+                style={'margin-top': 15}
+            )
+        ]
+    )
+
+
+app.layout = serve_layout
 
 
 @app.callback(Output('tabs-content', 'children'),
@@ -810,7 +810,7 @@ def render_plots_world(dropdown, yaxis_scale, locations):
             hover_name='Country',
             hover_data={'iso_code': False, 'Total Cases': ':,0f'}
         )
-        rename_map = {'total_cases_'+loc: loc for loc in locations}
+        rename_map = {'total_cases_' + loc: loc for loc in locations}
         rename_map['total_cases'] = 'World'
         renamed_timeorder = df_timeorder_world.rename(
             columns=rename_map
@@ -818,7 +818,7 @@ def render_plots_world(dropdown, yaxis_scale, locations):
         fig_ts = px.line(
             renamed_timeorder, x='date',
             # y=['World']+locations,
-            y=['World']+locations if world_removed else locations,
+            y=['World'] + locations if world_removed else locations,
             labels={
                 'date': 'Date',
                 'value': 'Total Cases',
