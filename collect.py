@@ -17,8 +17,8 @@ response = response.sort_values(by=['prname', 'date'])
 
 # Impute missing values
 provinces = response['prname'].value_counts().index
-impute_cols = ['numdeaths', 'numtested', 'deathstoday',
-               'testedtoday', 'numrecoveredtoday', 'numrecover', 'percentrecover']
+impute_cols = ['numdeaths', 'numtested', 'numdeathstoday',
+               'numtestedtoday', 'numrecoveredtoday', 'numrecover', 'percentrecover']
 
 for p in provinces:
     for colname in impute_cols:
