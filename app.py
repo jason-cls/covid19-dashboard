@@ -21,8 +21,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=serv
 app.config['suppress_callback_exceptions'] = True
 app.title = 'COVID-19 Dashboard'
 
-with open(os.path.join(os.getcwd(), 'data', 'lastUpdate.txt'), 'r') as textfile:
-    lastUpdate = textfile.read()
+
 
 path_ca = os.path.join(os.getcwd(), 'data', 'covid19canada.csv')
 df_can = pd.read_csv(path_ca, parse_dates=['date'])
@@ -431,6 +430,8 @@ tab_world = html.Div([
 
 
 def serve_layout():
+    with open(os.path.join(os.getcwd(), 'data', 'lastUpdate.txt'), 'r') as textfile:
+        lastUpdate = textfile.read()
     return dbc.Container(
         [
             dbc.Row(
