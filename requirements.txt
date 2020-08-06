@@ -12,6 +12,7 @@ dash-core-components==1.10.1
 dash-html-components==1.0.3
 dash-renderer==1.5.1
 dash-table==4.8.1
+dnspython==1.16.0
 Fiona==1.8.13
 Flask==1.1.2
 Flask-Compress==1.5.0
@@ -24,10 +25,11 @@ Jinja2==2.11.2
 MarkupSafe==1.1.1
 munch==2.5.0
 numpy==1.19.1
-pandas==1.0.5
+pandas==1.1.0
 pip==20.2.1
 plotly==4.9.0
 pycparser==2.20
+pymongo==3.10.1
 pyproj==2.6.1.post1
 python-dateutil==2.8.1
 pytz==2020.1

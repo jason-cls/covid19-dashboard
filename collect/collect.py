@@ -1,11 +1,64 @@
 from geojson_rewind import rewind
+import datetime
 import json
-import pandas as pd
 import os
+import pandas as pd
 
 
-def get_data():
-    df_can, df_world = process_data()
+def collect_data():
+    # ### Canada COVID data processing ####
+    url = 'https://health-infobase.canada.ca/src/data/covidLive/covid19.csv'
+    response_CA = pd.read_csv(url)
+
+    response_CA = response_CA.drop(columns=['pruid', 'prnameFR', 'percentoday',
+                                            'ratetested', 'ratetotal', 'ratedeaths',
+                                            'percentdeath', 'percentactive', 'numtotal_last14',
+                                            'ratetotal_last14', 'numdeaths_last14', 'ratedeaths_last14'])
+
+    response_CA['date'] = pd.to_datetime(response_CA['date'], dayfirst=True)
+    response_CA = response_CA.sort_values(by=['prname', 'date'])
+
+    # Impute missing values
+    provinces = response_CA['prname'].value_counts().index
+    impute_cols = ['numdeaths', 'numtested', 'numdeathstoday',
+                   'numtestedtoday', 'numrecoveredtoday', 'numrecover', 'percentrecover']
+
+    for p in provinces:
+        for colname in impute_cols:
+            response_CA.loc[response_CA['prname'] == p, colname] = response_CA.loc[
+                response_CA['prname'] == p, colname].ffill().fillna(0)
+
+    # ### World COVID data processing ####
+    url_world = 'https://covid.ourworldindata.org/data/owid-covid-data.csv'
+    response_world = pd.read_csv(url_world)
+
+    # Drop unneeded info
+    response_world = response_world.drop(
+        columns=['new_tests_smoothed', 'new_tests_smoothed_per_thousand', 'tests_units',
+                 'stringency_index', 'population', 'population_density', 'median_age',
+                 'aged_65_older', 'aged_70_older', 'gdp_per_capita', 'extreme_poverty',
+                 'cardiovasc_death_rate', 'diabetes_prevalence', 'female_smokers',
+                 'male_smokers', 'handwashing_facilities', 'life_expectancy']
+    )
+
+    response_world = response_world.loc[response_world['location'] != 'International']
+    response_world['date'] = pd.to_datetime(response_world['date'], yearfirst=True)
+    response_world = response_world.sort_values(by=['location', 'date'])
+
+    # Impute missing values
+    locations = pd.unique(response_world['location'])
+    impute_cols = ['new_tests', 'total_tests', 'total_tests_per_thousand', 'new_tests_per_thousand']
+
+    for loc in locations:
+        for colname in impute_cols:
+            response_world.loc[response_world['location'] == loc, colname] = \
+                response_world.loc[response_world['location'] == loc, colname].ffill()
+
+    return response_CA, response_world
+
+
+def format_data():
+    df_can, df_world = collect_data()
 
     # Process geodata for Canada choropleth map
     path_geo_ca = os.path.join(os.getcwd(), 'data', 'ca_geodata', 'canada-geo-simple.json')
@@ -63,7 +116,7 @@ def get_data():
             map_info_world['Test Count'].append(df_loc['total_tests'].values[-1])
 
     df_map_world = pd.DataFrame(map_info_world)
-    world_locations = list(pd.unique(df_world['location']))
+    #world_locations = list(pd.unique(df_world['location']))
 
     # Timeseries data
     df_timeorder_world = df_world.loc[df_world['location'] == 'World']
@@ -73,56 +126,42 @@ def get_data():
             df_timeorder_world = df_timeorder_world.merge(df_country, on='date', how='outer',
                                                           suffixes=[None, '_' + loc])
 
-    return df_can, df_map_CA, df_timeorder, jdataNo, df_world, df_map_world, df_timeorder_world, world_locations
+    return df_can, df_map_CA, df_timeorder, df_world, df_map_world, df_timeorder_world
 
 
-def process_data():
-    # ### Canada COVID data processing ####
-    url = 'https://health-infobase.canada.ca/src/data/covidLive/covid19.csv'
-    response_CA = pd.read_csv(url)
+# Stores data as MongoDB Atlas collections
+def store_data(db_client, df_can, df_map_CA, df_timeorder, df_world, df_map_world, df_timeorder_world):
+    db = db_client.covid
 
-    response_CA = response_CA.drop(columns=['pruid', 'prnameFR', 'percentoday',
-                                            'ratetested', 'ratetotal', 'ratedeaths',
-                                            'percentdeath', 'percentactive', 'numtotal_last14',
-                                            'ratetotal_last14', 'numdeaths_last14', 'ratedeaths_last14'])
+    collections = [db.can, db.map_CA, db.timeorder_CA,
+                   db.world, db.map_world, db.timeorder_world,
+                   db.geojson, db.lastUpdate]
+    for collection in collections:
+        collection.drop()
 
-    response_CA['date'] = pd.to_datetime(response_CA['date'], dayfirst=True)
-    response_CA = response_CA.sort_values(by=['prname', 'date'])
+    db.can.insert_many(df_can.to_dict('records'))
+    db.map_CA.insert_many(df_map_CA.to_dict('records'))
+    db.timeorder_CA.insert_many(df_timeorder.to_dict('records'))
+    db.world.insert_many(df_world.to_dict('records'))
+    db.map_world.insert_many(df_map_world.to_dict('records'))
+    db.timeorder_world.insert_many(df_timeorder_world.to_dict('records'))
 
-    # Impute missing values
-    provinces = response_CA['prname'].value_counts().index
-    impute_cols = ['numdeaths', 'numtested', 'numdeathstoday',
-                   'numtestedtoday', 'numrecoveredtoday', 'numrecover', 'percentrecover']
+    utc_datetime = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M')
+    db.lastUpdate.insert({'utc_datetime': utc_datetime})
 
-    for p in provinces:
-        for colname in impute_cols:
-            response_CA.loc[response_CA['prname'] == p, colname] = response_CA.loc[
-                response_CA['prname'] == p, colname].ffill().fillna(0)
+    print('Data has been stored!')
 
-    # ### World COVID data processing ####
-    url_world = 'https://covid.ourworldindata.org/data/owid-covid-data.csv'
-    response_world = pd.read_csv(url_world)
 
-    # Drop unneeded info
-    response_world = response_world.drop(
-        columns=['new_tests_smoothed', 'new_tests_smoothed_per_thousand', 'tests_units',
-                 'stringency_index', 'population', 'population_density', 'median_age',
-                 'aged_65_older', 'aged_70_older', 'gdp_per_capita', 'extreme_poverty',
-                 'cardiovasc_death_rate', 'diabetes_prevalence', 'female_smokers',
-                 'male_smokers', 'handwashing_facilities', 'life_expectancy']
-    )
+# Retrieves database collections from MongoDB Atlas
+def pull_db_data(db_client):
+    db = db_client.covid
 
-    response_world = response_world.loc[response_world['location'] != 'International']
-    response_world['date'] = pd.to_datetime(response_world['date'], yearfirst=True)
-    response_world = response_world.sort_values(by=['location', 'date'])
+    df_can = pd.DataFrame.from_records(db.can.find()).sort_values(by=['prname', 'date'])
+    df_map_CA = pd.DataFrame.from_records(db.map_CA.find())
+    df_timeorder = pd.DataFrame.from_records(db.timeorder_CA.find()).sort_values(by=['prname', 'date'])
+    df_world = pd.DataFrame.from_records(db.world.find()).sort_values(by=['location', 'date'])
+    df_map_world = pd.DataFrame.from_records(db.map_world.find())
+    df_timeorder_world = pd.DataFrame.from_records(db.timeorder_world.find()).sort_values(by=['location', 'date'])
+    lastUpdate = db.lastUpdate.find_one()
 
-    # Impute missing values
-    locations = pd.unique(response_world['location'])
-    impute_cols = ['new_tests', 'total_tests', 'total_tests_per_thousand', 'new_tests_per_thousand']
-
-    for loc in locations:
-        for colname in impute_cols:
-            response_world.loc[response_world['location'] == loc, colname] = \
-                response_world.loc[response_world['location'] == loc, colname].ffill()
-
-    return response_CA, response_world
+    return df_can, df_map_CA, df_timeorder, df_world, df_map_world, df_timeorder_world, lastUpdate

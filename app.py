@@ -5,11 +5,16 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import flask
 import numpy as np
+import pandas as pd
 import plotly.express as px
 from random import randint
 import os
+import json
 import datetime
-from collect.collect import get_data
+from collect.collect import pull_db_data
+from geojson_rewind import rewind
+import pymongo
+
 
 external_stylesheets = [dbc.themes.LUX,
                         "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/font-awesome.min.css"]
@@ -20,8 +25,23 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=serv
 app.config['suppress_callback_exceptions'] = True
 app.title = 'COVID-19 Dashboard'
 
+connectionURL = os.getenv('MONGO_URL').strip("\"")
+db_client = pymongo.MongoClient(connectionURL)
+
+# Process geodata for Canada choropleth map
+path_geo_ca = os.path.join(os.getcwd(), 'data', 'ca_geodata', 'canada-geo-simple.json')
+with open(path_geo_ca) as geofile:
+    jdataNo = json.load(geofile)
+
+jdataNo = rewind(jdataNo, rfc7946=False)  # geojson formatting
+for k in range(len(jdataNo['features'])):
+    jdataNo['features'][k]['properties']['id'] = k  # assign province ID
+
 # Initialize global variables
-df_can, df_map_CA, df_timeorder, jdataNo, df_world, df_map_world, df_timeorder_world, world_locations = get_data()
+df_can, df_map_CA, df_timeorder, df_world, df_map_world, df_timeorder_world, lastUpdate_utc = pull_db_data(db_client)
+
+
+world_locations = list(pd.unique(df_world['location']))
 
 tab_canada = html.Div([
     dbc.Row(
@@ -357,8 +377,7 @@ tab_world = html.Div([
 
 def serve_layout():
     # Update latest data on refresh
-    df_can, df_map_CA, df_timeorder, jdataNo, df_world, df_map_world, df_timeorder_world, world_locations = get_data()
-    utc_datetime = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M')
+    df_can, df_map_CA, df_timeorder, df_world, df_map_world, df_timeorder_world, lastUpdate_utc = pull_db_data(db_client)
     return dbc.Container(
         [
             dbc.Row(
@@ -366,7 +385,7 @@ def serve_layout():
                     dbc.Col(
                         [
                             html.H1('COVID-19 Dashboard'),
-                            html.P('Last Update: ' + utc_datetime + ' UTC')
+                            html.P('Last Update: ' + lastUpdate_utc['utc_datetime'] + ' UTC')
                         ],
 
                         width=6
@@ -828,4 +847,4 @@ def render_plots_world(dropdown, yaxis_scale, locations):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)
