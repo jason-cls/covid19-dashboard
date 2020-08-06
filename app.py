@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import base64
 import flask
 import numpy as np
 import pandas as pd
@@ -10,7 +11,6 @@ import plotly.express as px
 from random import randint
 import os
 import json
-import datetime
 from collect.collect import pull_db_data
 from geojson_rewind import rewind
 import pymongo
@@ -24,6 +24,10 @@ server.secret_key = os.environ.get('secret_key', str(randint(0, 1000000)))
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 app.config['suppress_callback_exceptions'] = True
 app.title = 'COVID-19 Dashboard'
+
+svg_file = os.path.join(os.getcwd(), 'misc', 'github.svg')
+encoded = base64.b64encode(open(svg_file, 'rb').read())
+github_svg = 'data:image/svg+xml;base64,{}'.format(encoded.decode())
 
 connectionURL = os.getenv('MONGO_URL').strip("\"")
 db_client = pymongo.MongoClient(connectionURL)
@@ -385,7 +389,11 @@ def serve_layout():
                     dbc.Col(
                         [
                             html.H1('COVID-19 Dashboard'),
-                            html.P('Last Update: ' + lastUpdate_utc['utc_datetime'] + ' UTC')
+                            html.P(['Last Update: ' + lastUpdate_utc['utc_datetime'] + ' UTC',
+                                    html.A(dbc.Button([html.Img(src=github_svg, height='20'), " Follow @jason-cls"],
+                                                      color="light", size="sm", style={'margin-left': 10, 'margin-bottom': 0}),
+                                           href="https://github.com/jason-cls", target="_blank")
+                                    ]),
                         ],
 
                         width=6
