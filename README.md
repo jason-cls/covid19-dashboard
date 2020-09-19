@@ -1,6 +1,6 @@
 # covid19-dashboard
 An interactive dashboard app tracking COVID-19 statistics for Canada and the world. 
-The dashboard interfaces with a NoSQL cloud database (MongoDB Atlas) and checks hourly for data updates.
+The dashboard interfaces with a NoSQL cloud database (MongoDB Atlas) and checks daily for data updates.
 
  
 Built using Plotly's Dash in Python.

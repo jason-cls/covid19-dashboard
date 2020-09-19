@@ -44,7 +44,6 @@ for k in range(len(jdataNo['features'])):
 # Initialize global variables
 df_can, df_map_CA, df_timeorder, df_world, df_map_world, df_timeorder_world, lastUpdate_utc = pull_db_data(db_client)
 
-
 world_locations = list(pd.unique(df_world['location']))
 
 tab_canada = html.Div([
@@ -855,4 +854,5 @@ def render_plots_world(dropdown, yaxis_scale, locations):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=int(os.environ.get("PORT", 5000)), host='0.0.0.0')
+    app.run_server(debug=True)
+    # app.run_server(debug=False, port=int(os.environ.get("PORT", 5000)), host='0.0.0.0')

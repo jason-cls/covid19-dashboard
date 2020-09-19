@@ -8,12 +8,9 @@ import pandas as pd
 def collect_data():
     # ### Canada COVID data processing ####
     url = 'https://health-infobase.canada.ca/src/data/covidLive/covid19.csv'
-    response_CA = pd.read_csv(url)
-
-    response_CA = response_CA.drop(columns=['pruid', 'prnameFR', 'percentoday',
-                                            'ratetested', 'ratetotal', 'ratedeaths',
-                                            'percentdeath', 'percentactive', 'numtotal_last14',
-                                            'ratetotal_last14', 'numdeaths_last14', 'ratedeaths_last14'])
+    response_CA = pd.read_csv(url)[['prname', 'date', 'numconf', 'numprob', 'numdeaths', 'numtotal', 'numtested',
+                                    'numrecover', 'percentrecover', 'numtoday', 'numdeathstoday', 'numtestedtoday',
+                                    'numrecoveredtoday', 'numactive', 'rateactive']]
 
     response_CA['date'] = pd.to_datetime(response_CA['date'], dayfirst=True)
     response_CA = response_CA.sort_values(by=['prname', 'date'])
@@ -30,16 +27,12 @@ def collect_data():
 
     # ### World COVID data processing ####
     url_world = 'https://covid.ourworldindata.org/data/owid-covid-data.csv'
-    response_world = pd.read_csv(url_world)
-
-    # Drop unneeded info
-    response_world = response_world.drop(
-        columns=['new_tests_smoothed', 'new_tests_smoothed_per_thousand', 'tests_units',
-                 'stringency_index', 'population', 'population_density', 'median_age',
-                 'aged_65_older', 'aged_70_older', 'gdp_per_capita', 'extreme_poverty',
-                 'cardiovasc_death_rate', 'diabetes_prevalence', 'female_smokers',
-                 'male_smokers', 'handwashing_facilities', 'life_expectancy']
-    )
+    response_world = pd.read_csv(url_world)[['iso_code', 'continent', 'location', 'date', 'total_cases', 'new_cases',
+                                             'total_deaths', 'new_deaths', 'total_cases_per_million',
+                                             'new_cases_per_million', 'total_deaths_per_million',
+                                             'new_deaths_per_million', 'new_tests', 'total_tests',
+                                             'total_tests_per_thousand', 'new_tests_per_thousand',
+                                             'tests_per_case', 'positive_rate', 'hospital_beds_per_thousand']]
 
     response_world = response_world.loc[response_world['location'] != 'International']
     response_world['date'] = pd.to_datetime(response_world['date'], yearfirst=True)
